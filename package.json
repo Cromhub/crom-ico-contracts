@@ -1,0 +1,35 @@
+{
+  "name": "crom-ico-contracts",
+  "version": "1.0.0",
+  "description": "CROM contracts",
+  "private": true,
+  "main": "truffle.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "zeppelin-solidity": "^1.3.0"
+  },
+  "devDependencies": {
+    "truffle": "3.4.11",
+    "babel-cli": "^6.26.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-es2017": "^6.24.1",
+    "babel-preset-stage-2": "^6.24.1",
+    "babel-preset-stage-3": "^6.24.1",
+    "babel-register": "^6.26.0",
+    "chai": "^4.1.2",
+    "chai-almost": "^1.0.1",
+    "chai-as-promised": "^7.1.1",
+    "chai-bignumber": "^2.0.1",
+    "coveralls": "^3.0.0",
+    "ethereumjs-testrpc": "^4.1.1",
+    "solidity-coverage": "^0.2.7"
+  },
+  "scripts": {
+    "test": "./scripts/test.sh",
+    "coverage": "SOLIDITY_COVERAGE=true ./scripts/test.sh",
+    "testrpc": "./scripts/testrpc.sh 8545"
+  }
+}
