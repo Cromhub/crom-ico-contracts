@@ -1,5 +1,6 @@
 # CROM ICO contracts
-
+[![Build Status](https://travis-ci.org/Cromhub/crom-ico-contracts.svg?branch=master)](https://travis-ci.org/Cromhub/crom-ico-contracts)  
+  
 This repository contains all Ethereum smart contracts used throughout CROMhub
 ICO. For more information regarding the ICO, please visit https://cromhub.com.
 
