@@ -3,6 +3,8 @@ const CromToken = artifacts.require("./CromToken.sol");
 
 import EVMThrow from "./helpers/EVMThrow";
 import {skipPreIco, skipToEnd} from "./helpers/TimeHelpers";
+import {skipInTestCoverage} from "./helpers/TestControl";
+import {BigNumber} from "bignumber.js";
 
 const should = require('chai')
 .use(require('chai-as-promised'))
@@ -29,7 +31,7 @@ contract('CromIco', function(accounts) {
 
     it("should hold 6mil tokens after deployment", async function() {
         let balance = await cromToken.balanceOf.call(icoContract.address)
-        balance.toNumber().should.equal(6 * Math.pow(10, 6));
+        balance.toNumber().should.be.bignumber.equal(6 * Math.pow(10, 6));
     });
 
     it("should start with pre ico phase", async function() {
@@ -47,7 +49,7 @@ contract('CromIco', function(accounts) {
         await skipPreIco();
         await icoContract.sendTransaction({value: SOFT_CAP_ETHER, from: accounts[1]}).should.be.fulfilled;
         let balance = await cromToken.balanceOf.call(accounts[1]);
-        balance.toNumber().should.equal(Math.pow(10, 6));
+        balance.toNumber().should.be.bignumber.equal(Math.pow(10, 6));
     });
 
     it("should throw if the amount paid is less than token price", async function() {
@@ -61,7 +63,7 @@ contract('CromIco', function(accounts) {
         await skipPreIco();
         await icoContract.sendTransaction({value: SOFT_CAP_ETHER * 4, from: accounts[1]}).should.be.fulfilled;
         let balance = await cromToken.balanceOf.call(accounts[1]);
-        balance.toNumber().should.equal(3.6 * Math.pow(10, 6));
+        balance.toNumber().should.be.bignumber.equal(3.6 * Math.pow(10, 6));
     });
 
     it("should throw when a nonmember tries to invest in preico", async function() {
@@ -89,7 +91,7 @@ contract('CromIco', function(accounts) {
         isPreIcoActive.should.equal(true);
         status.should.equal(false);
         status2.should.equal(true);
-        balance.toNumber().should.equal(Math.pow(10, 6));
+        balance.toNumber().should.be.bignumber.equal(Math.pow(10, 6));
     });
 
     it("should throw when sending less than minimal investment during pre ico", async function() {
@@ -146,7 +148,7 @@ contract('CromIco', function(accounts) {
 
     it("should allow members to withdraw funds if ico hasn't reached the goal", async function() {
         await skipPreIco();
-        let amountSent = web3.toWei(100, "ether");
+        let amountSent = new BigNumber(web3.toWei(100, "ether"));
         await icoContract.sendTransaction({value: amountSent, from: accounts[1]});
         await skipToEnd();
         let hasEnded = await icoContract.hasEnded.call();
@@ -170,7 +172,7 @@ contract('CromIco', function(accounts) {
         await newToken.transfer(icoContract.address, 100, {from: accounts[1]});
         await icoContract.claimTokens(newToken.address, {from: accounts[0]}).should.be.fulfilled;
         let balance = await newToken.balanceOf.call(targetWallet);
-        balance.toNumber().should.equal(100);
+        balance.toNumber().should.be.bignumber.equal(100);
     });
 
     it("should transfer unsold tokens to target wallet", async function() {
@@ -179,7 +181,7 @@ contract('CromIco', function(accounts) {
         await skipToEnd();
         await icoContract.withdrawUnsoldTokens().should.be.fulfilled;
         let balance = await cromToken.balanceOf(targetWallet);
-        balance.toNumber().should.equal(5000000);
+        balance.toNumber().should.be.bignumber.equal(5000000);
     });
 
     it("should throw when trying to withdraw unsold tokens before it end", async function() {
@@ -200,33 +202,33 @@ contract('CromIco', function(accounts) {
         await icoContract.finalizeIco().should.be.fulfilled;
         let unsoldTokens = await cromToken.balanceOf(targetWallet);
         unsoldTokens.toNumber().should.equal(0);
-        (web3.eth.getBalance(targetWallet).toNumber() - targetWalletInitialBalance)
+        (new BigNumber(web3.eth.getBalance(targetWallet).toNumber()) - targetWalletInitialBalance)
           .should.be.bignumber.equal(HARD_CAP_ETHER);
     });
 
     it("should transfer funds if softcap was reached", async function() {
-      let targetWalletInitialBalance = web3.eth.getBalance(targetWallet).toNumber();
+      let targetWalletInitialBalance = new BigNumber(web3.eth.getBalance(targetWallet).toNumber());
       await skipPreIco();
       await icoContract.sendTransaction({value: SOFT_CAP_ETHER, from: accounts[1]});
       await skipToEnd();
       await icoContract.finalizeIco().should.be.fulfilled;
-      (web3.eth.getBalance(targetWallet).toNumber() - targetWalletInitialBalance)
+      (new BigNumber(web3.eth.getBalance(targetWallet).toNumber()).minus(targetWalletInitialBalance))
         .should.be.bignumber.equal(SOFT_CAP_ETHER);
     });
 
-    /*
-    it("should use less than 120000 gas when sending funds", async function() {
+    it("should use less than 130000 gas when sending funds", async function() {
+      skipInTestCoverage(this);
       await skipPreIco();
       let transaction = await icoContract.sendTransaction({value: SOFT_CAP_ETHER, from: accounts[1]});
       let gasUsed = transaction.receipt.gasUsed;
-      gasUsed.should.be.below(120000);
+      gasUsed.should.be.bignumber.below(130000);
     });
 
-    it("should use less than 120000 gas when sending funds during pre ico", async function() {
+    it("should use less than 130000 gas when sending funds during pre ico", async function() {
+      skipInTestCoverage(this);
       await icoContract.addPreIcoMembers([accounts[1]], {from: accounts[0]}).should.be.fulfilled;
       let transaction = await icoContract.sendTransaction({value: SOFT_CAP_ETHER, from: accounts[1]});
       let gasUsed = transaction.receipt.gasUsed;
-      gasUsed.should.be.below(120000);
+      gasUsed.should.be.bignumber.below(130000);
     });
-    */
 });

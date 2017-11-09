@@ -1,6 +1,7 @@
 var CromToken = artifacts.require("./CromToken.sol");
 
 import EVMThrow from "./helpers/EVMThrow";
+import {BigNumber} from "bignumber.js";
 
 const should = require('chai')
 .use(require('chai-as-promised'))
@@ -21,18 +22,20 @@ contract('CromToken', function(accounts) {
 
     it("should have total supply of 10mil", async function() {
         let totalSupply = await cromToken.totalSupply.call();
-        totalSupply.toNumber().should.equal(10 * Math.pow(10, 6));
+        totalSupply.toNumber().should.be.bignumber.equal(10 * Math.pow(10, 6));
     });
 
     it("should transfer correctly", async function() {
         var amount = 10;
         let accountOneStartingBalance = await cromToken.balanceOf.call(accounts[0]);
+        accountOneStartingBalance = new BigNumber(accountOneStartingBalance.toNumber());
         let accountTwoStartingBalance = await cromToken.balanceOf.call(accounts[1]);
+        accountTwoStartingBalance = new BigNumber(accountTwoStartingBalance.toNumber());
         await cromToken.transfer(accounts[1], amount, {from: accounts[0]});
         let accountOneEndBalance = await cromToken.balanceOf.call(accounts[0]);
         let accountTwoEndBalance = await cromToken.balanceOf.call(accounts[1]);
-        accountTwoEndBalance.toNumber().should.equal(accountTwoStartingBalance.toNumber() + amount);
-        accountOneEndBalance.toNumber().should.equal(accountOneStartingBalance.toNumber() - amount);
+        accountTwoEndBalance.should.be.bignumber.equal(accountTwoStartingBalance.plus(amount));
+        accountOneEndBalance.should.be.bignumber.equal(accountOneStartingBalance.minus(amount));
     });
 
     it("should support approving", async function() {
