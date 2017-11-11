@@ -216,6 +216,24 @@ contract('CromIco', function(accounts) {
         .should.be.bignumber.equal(SOFT_CAP_ETHER);
     });
 
+    it("should support pausing and resuming", async function() {
+      await skipPreIco();
+      await icoContract.pause();
+      await icoContract.sendTransaction({value: SOFT_CAP_ETHER, from: accounts[1]}).should.be.rejectedWith(EVMThrow);
+      await icoContract.resume();
+      await icoContract.sendTransaction({value: SOFT_CAP_ETHER, from: accounts[1]}).should.be.fulfilled;
+    });
+
+    it("should allow changing target wallet", async function() {
+      let originalWallet = await icoContract.targetWallet.call();
+      await icoContract.changeTargetWallet(accounts[0]);
+      let walletVerified = await icoContract.targetWalletVerified.call();
+      let currentWallet = await icoContract.targetWallet.call();
+      walletVerified.should.equal(false);
+      currentWallet.valueOf().should.not.equal(originalWallet.valueOf());
+      currentWallet.valueOf().should.equal(accounts[0]);
+    });
+
     it("should use less than 130000 gas when sending funds", async function() {
       skipInTestCoverage(this);
       await skipPreIco();

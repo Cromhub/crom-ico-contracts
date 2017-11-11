@@ -46,12 +46,18 @@ contract CromIco is Ownable, ClaimableTokens {
 
     uint256 public tokensSold;
 
+    bool public paused;
+
     enum Stages {
         WalletUnverified,
         BeforeIco,
-        PreIco,
-        PublicIco,
+        Payable,
         AfterIco
+    }
+
+    enum PayableStages {
+        PreIco,
+        PublicIco
     }
 
     event TokenPurchase(address indexed purchaser, uint256 value, uint256 amount);
@@ -64,6 +70,7 @@ contract CromIco is Ownable, ClaimableTokens {
         endTime = startTime + DURATION;
         targetWallet = beneficiaryWallet;
         targetWalletVerified = false;
+        paused = false;
     }
 
     modifier atStage(Stages stage) {
@@ -71,14 +78,8 @@ contract CromIco is Ownable, ClaimableTokens {
         _;
     }
 
-    modifier atPayableStage() {
-        Stages stage = getCurrentStage();
-        require (stage == Stages.PreIco || stage == Stages.PublicIco);
-        _;
-    }
-
     // fallback function can be used to buy tokens
-    function() payable atPayableStage {
+    function() payable atStage(Stages.Payable) {
         buyTokens();
     }
 
@@ -86,6 +87,7 @@ contract CromIco is Ownable, ClaimableTokens {
     function buyTokens() internal {
         require(msg.sender != 0x0);
         require(msg.value > 0);
+        require(!paused);
 
         uint256 weiAmount = msg.value;
 
@@ -94,7 +96,7 @@ contract CromIco is Ownable, ClaimableTokens {
         require(tokens > 0);
         require(token.balanceOf(this) >= tokens);
 
-        if (Stages.PreIco == getCurrentStage()) {
+        if (PayableStages.PreIco == getPayableStage()) {
             require(weiAmount >= MINIMAL_PRE_ICO_INVESTMENT);
             require(preIcoMembers[msg.sender]);
             require(tokensSold.add(tokens) <= BONUS_BATCH);
@@ -129,12 +131,16 @@ contract CromIco is Ownable, ClaimableTokens {
 
     // @return true if the ICO is in pre ICO phase
     function isPreIcoActive() public constant returns (bool) {
-        return Stages.PreIco == getCurrentStage();
+        bool isPayable = Stages.Payable == getCurrentStage();
+        bool isPreIco = PayableStages.PreIco == getPayableStage();
+        return isPayable && isPreIco;
     }
 
     // @return true if the ICO is in progress
     function isPublicIcoActive() public constant returns (bool) {
-        return Stages.PublicIco == getCurrentStage();
+        bool isPayable = Stages.Payable == getCurrentStage();
+        bool isPublic = PayableStages.PublicIco == getPayableStage();
+        return isPayable && isPublic;
     }
 
     // @return true if ICO has ended
@@ -171,6 +177,21 @@ contract CromIco is Ownable, ClaimableTokens {
         token.transfer(targetWallet, token.balanceOf(this));
     }
 
+    function pause() public onlyOwner {
+        require(!paused);
+        paused = true;
+    }
+
+    function resume() public onlyOwner {
+        require(paused);
+        paused = false;
+    }
+
+    function changeTargetWallet(address wallet) public onlyOwner {
+        targetWallet = wallet;
+        targetWalletVerified = false;
+    }
+
     function calculateTokensAmount(uint256 funds) internal returns (uint256) {
         uint256 tokens = funds.div(TOKEN_PRICE);
         if (tokensSold < BONUS_BATCH) {
@@ -189,12 +210,18 @@ contract CromIco is Ownable, ClaimableTokens {
             return Stages.WalletUnverified;
         } else if (now < preStartTime) {
             return Stages.BeforeIco;
-        } else if (now < startTime) {
-            return Stages.PreIco;
         } else if (now < endTime && amountRaised < HARD_CAP) {
-            return Stages.PublicIco;
+            return Stages.Payable;
         } else {
             return Stages.AfterIco;
+        }
+    }
+
+    function getPayableStage() internal constant returns (PayableStages) {
+        if (now < startTime) {
+            return PayableStages.PreIco;
+        } else {
+            return PayableStages.PublicIco;
         }
     }
 }
