@@ -115,6 +115,16 @@ contract('CromIco', function(accounts) {
         await icoContract.sendTransaction({value: HARD_CAP_ETHER * 2, from: accounts[1]}).should.be.rejectedWith(EVMThrow);
     });
 
+    it("should throw when trying to invest more than hardcap", async function() {
+        await skipPreIco();
+        await icoContract.sendTransaction({value: HARD_CAP_ETHER + 1, from: accounts[1]}).should.be.rejectedWith(EVMThrow);
+    });
+
+    it("should allow reaching hardcap in one transaction", async function() {
+        await skipPreIco();
+        await icoContract.sendTransaction({value: HARD_CAP_ETHER, from: accounts[1]}).should.be.fulfilled;
+    });
+
     it("should throw when trying to withdraw funds when ico is in progress", async function() {
         await skipPreIco();
         await icoContract.withdrawFunds().should.be.rejectedWith(EVMThrow);
