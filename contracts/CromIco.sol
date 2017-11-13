@@ -136,7 +136,7 @@ contract CromIco is Ownable, ClaimableTokens {
         return isPayable && isPreIco;
     }
 
-    // @return true if the ICO is in progress
+    // @return true if the public ICO is in progress
     function isPublicIcoActive() public constant returns (bool) {
         bool isPayable = Stages.Payable == getCurrentStage();
         bool isPublic = PayableStages.PublicIco == getPayableStage();
@@ -154,7 +154,7 @@ contract CromIco is Ownable, ClaimableTokens {
     }
 
     // withdraw the contributed funds if the ICO has
-    //ended and the goal has not been reached
+    // ended and the goal has not been reached
     function withdrawFunds() public atStage(Stages.AfterIco) returns(bool) {
         require(!softCapReached());
         require(balanceOf[msg.sender] > 0);

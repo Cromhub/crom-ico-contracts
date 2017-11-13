@@ -105,7 +105,7 @@ contract('CromIco', function(accounts) {
         await icoContract.sendTransaction({value: web3.toWei(10, "ether"), from: accounts[1]}).should.be.rejectedWith(EVMThrow);
     });
 
-    it("should throw when making making a zero purchse", async function() {
+    it("should throw when making making a zero purchase", async function() {
         await skipPreIco();
         await icoContract.sendTransaction({value: 0, from: accounts[1]}).should.be.rejectedWith(EVMThrow);
     });
