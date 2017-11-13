@@ -234,6 +234,20 @@ contract('CromIco', function(accounts) {
       await icoContract.sendTransaction({value: SOFT_CAP_ETHER, from: accounts[1]}).should.be.fulfilled;
     });
 
+    it("should throw when trying to resume in unpaused state", async function() {
+      await icoContract.resume().should.be.rejectedWith(EVMThrow);
+    });
+
+    it("should throw when trying to pause in paused state", async function() {
+      await icoContract.pause().should.be.fulfilled;
+      await icoContract.pause().should.be.rejectedWith(EVMThrow);
+    });
+
+    it("should throw when trying to verify target wallet from a different address", async function() {
+      await icoContract.changeTargetWallet(accounts[1]);
+      await icoContract.verifyTargetWallet({from: accounts[0]}).should.be.rejectedWith(EVMThrow);
+    });
+
     it("should allow changing target wallet", async function() {
       let originalWallet = await icoContract.targetWallet.call();
       await icoContract.changeTargetWallet(accounts[0]);
