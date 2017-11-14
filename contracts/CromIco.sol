@@ -97,8 +97,8 @@ contract CromIco is Ownable, ClaimableTokens {
         require(token.balanceOf(this) >= tokens);
 
         if (PayableStages.PreIco == getPayableStage()) {
-            require(weiAmount >= MINIMAL_PRE_ICO_INVESTMENT);
             require(preIcoMembers[msg.sender]);
+            require(weiAmount.add(balanceOf[msg.sender]) >= MINIMAL_PRE_ICO_INVESTMENT);
             require(tokensSold.add(tokens) <= BONUS_BATCH);
         }
 

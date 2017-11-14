@@ -99,6 +99,12 @@ contract('CromIco', function(accounts) {
         await icoContract.sendTransaction({value: web3.toWei(9, "ether"), from: accounts[1]}).should.be.rejectedWith(EVMThrow);
     });
 
+    it("should accept less than minimal investment if the minimum has been reached by previous transaction", async function() {
+        await icoContract.addPreIcoMembers([accounts[1]]);
+        await icoContract.sendTransaction({value: web3.toWei(10, "ether"), from: accounts[1]}).should.be.fulfilled;
+        await icoContract.sendTransaction({value: web3.toWei(1, "ether"), from: accounts[1]}).should.be.fulfilled;
+    });
+
     it("should throw when trying to buy more tokens in pre ico than avaialble", async function() {
         await icoContract.addPreIcoMembers([accounts[1]]);
         await icoContract.sendTransaction({value: PRE_ICO_MAX_ETHER, from: accounts[1]});
